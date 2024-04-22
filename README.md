@@ -15,7 +15,7 @@ TabNavigator is a simple tab switcher for Obsidian.
 
 ## Usage
 
-Once TabSwitcher is enabled, it will automatically integrate with Obsidian's tab system. You can access the tab switcher interface through a keyboard shortcut (please refer to the plugin settings to customize the shortcut). To delete a tab, simply use the delete option next to each tab in the switcher interface.
+Once TabSwitcher is enabled, it will automatically integrate with Obsidian's tab system. 
 
 ## License
 

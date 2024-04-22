@@ -17,6 +17,23 @@ TabNavigator is a simple tab switcher for Obsidian.
 
 Once TabSwitcher is enabled, it will automatically integrate with Obsidian's tab system. 
 
+## Privacy and Security
+
+TabNavigator does not transmit any user data externally. All data is kept locally, prioritizing user privacy and security.
+
+## Performance and Compatibility
+
+TabNavigator is designed to be lightweight and does not negatively impact Obsidian's performance. It is regularly updated to ensure compatibility with new versions of Obsidian.
+
+## Support
+
+For questions or issues regarding TabNavigator, please use the GitHub Issues page for support. Feedback and feature requests are also welcome.
+
+## Contributing
+
+TabNavigator is an open-source project. Contributions such as code improvements, bug reports, and feature suggestions are welcome. If you're interested in contributing, please check out the project page on GitHub.
+
 ## License
 
 This plugin is released under the MIT License. For more details, please refer to the LICENSE file.
+

@@ -9,13 +9,13 @@ TabNavigator is a simple tab switcher for Obsidian.
 
 ## Installation
 
-1. Create a `tab-switcher` folder inside your `.obsidian/plugins` directory in your Obsidian vault.
-2. Download the latest release of `main.js`, `manifest.json`, and `styles.css` from the GitHub repository and place them inside the `tab-switcher` folder.
+1. Create a `tab-navigator` folder inside your `.obsidian/plugins` directory in your Obsidian vault.
+2. Download the latest release of `main.js`, and `manifest.json` from the GitHub repository and place them inside the `tab-navigator` folder.
 3. Restart Obsidian, then enable TabSwitcher from the Community Plugins section in the settings.
 
 ## Usage
 
-Once TabSwitcher is enabled, it will automatically integrate with Obsidian's tab system. 
+Once TabNavigator is enabled, it will automatically integrate with Obsidian's tab system. 
 
 ## Privacy and Security
 
@@ -29,11 +29,6 @@ TabNavigator is designed to be lightweight and does not negatively impact Obsidi
 
 For questions or issues regarding TabNavigator, please use the GitHub Issues page for support. Feedback and feature requests are also welcome.
 
-## Contributing
-
-TabNavigator is an open-source project. Contributions such as code improvements, bug reports, and feature suggestions are welcome. If you're interested in contributing, please check out the project page on GitHub.
-
 ## License
 
 This plugin is released under the MIT License. For more details, please refer to the LICENSE file.
-

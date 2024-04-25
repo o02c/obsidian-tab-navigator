@@ -7,7 +7,7 @@ export default class TabSwitcher extends Plugin {
   async onload() {
     this.addCommand({
       id: 'search-tabs',
-      name: 'Search Tabs',
+      name: 'Search tabs',
       callback: () => {
         const { app } = this;
         // 既存のインスタンスがあれば破棄する
@@ -37,7 +37,7 @@ export default class TabSwitcher extends Plugin {
     // 重複するタブを削除するコマンドを追加
     this.addCommand({
       id: 'remove-duplicate-tabs',
-      name: 'Remove Duplicate Tabs',
+      name: 'Remove duplicate tabs',
       callback: () => {
         this.removeDuplicateTabs();
       },

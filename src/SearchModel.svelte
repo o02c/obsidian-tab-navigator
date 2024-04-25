@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { onMount, onDestroy, createEventDispatcher } from "svelte";
+	import { onMount, createEventDispatcher } from "svelte";
 	import Fuse from "fuse.js";
-	import { App, WorkspaceLeaf } from "obsidian";
+	import { App, WorkspaceLeaf, FileView } from "obsidian";
 	export let app: App;
 	export let removeDuplicateTabs: () => void;
 
@@ -42,7 +42,7 @@
 		app.workspace.iterateRootLeaves((leaf: WorkspaceLeaf) => {
 			let titleOrName: string;
 			let details: string;
-			if ("file" in leaf.view && leaf.view.file) {
+			if (leaf.view instanceof FileView) {
 				const file = leaf.view.file as any; // 型アサーションを使用してエラーを修正
 				titleOrName = file.basename;
 				details = file.path;
@@ -113,10 +113,6 @@
 		}
 	}
 
-	function isFileView(view: any): view is { file: any } {
-		return "file" in view;
-	}
-
 	function selectItem(index: number) {
 		const selectedItem = searchResults[index];
 		app.workspace.setActiveLeaf(selectedItem.leaf);
@@ -162,7 +158,7 @@
 						</div>
 						<div class="suggestion-note qsp-note">
 							<span class="qsp-path-indicator">
-								{#if isFileView(leaf.view)}
+								{#if leaf.view instanceof FileView}
 									<svg
 										xmlns="http://www.w3.org/2000/svg"
 										width="24"

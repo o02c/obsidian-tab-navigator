@@ -42,7 +42,7 @@ const context = await esbuild.context({
 	plugins: [
         sveltePlugin({
 			compilerOptions: {
-				css: true,
+				css: 'injected',
 			},
             preprocess: sveltePreprocess(), // TypeScriptを含むSvelteファイルの前処理を有効化
         }),

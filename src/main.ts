@@ -1,10 +1,19 @@
 import { Plugin, WorkspaceLeaf, FileView } from 'obsidian';
-import SearchModel from './SearchModel.svelte'; // Svelte コンポーネントをインポート
+import SearchModel from './model/SearchModel.svelte';
+import TabViewModel from './model/TabViewModel.svelte';
+import { DEFAULT_SETTINGS, TabNavigatorSettingTab } from './setting';
+import type { PluginSettings } from './setting';
 
 export default class TabSwitcher extends Plugin {
+  settings: PluginSettings | null = null;
   searchModelInstance: SearchModel | null = null; // SearchModelのインスタンスを保持するためのプロパティ
+  tabViewInstance: TabViewModel | null = null;
+
 
   async onload() {
+    await this.loadSettings();
+    this.addSettingTab(new TabNavigatorSettingTab(this.app, this))
+
     this.addCommand({
       id: 'search-tabs',
       name: 'Search tabs',
@@ -42,6 +51,28 @@ export default class TabSwitcher extends Plugin {
         this.removeDuplicateTabs();
       },
     });
+
+    // タブビューを表示する
+    if (this.settings?.enableTabView) {
+      // キーボードイベントのリスナーを追加
+      document.addEventListener('keydown', this.handleKeyDown.bind(this));
+      document.addEventListener('keyup', this.handleKeyUp.bind(this));
+    }
+  }
+
+  async loadSettings() {
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+  }
+
+  async saveSettings() {
+    await this.saveData(this.settings);
+    if (this.settings?.enableTabView) {
+      document.removeEventListener('keydown', this.handleKeyDown.bind(this));
+      document.removeEventListener('keyup', this.handleKeyUp.bind(this));
+      // キーボードイベントのリスナーを追加
+      document.addEventListener('keydown', this.handleKeyDown.bind(this));
+      document.addEventListener('keyup', this.handleKeyUp.bind(this));
+    }
   }
 
   // 重複するタブを削除するメソッド
@@ -58,6 +89,8 @@ export default class TabSwitcher extends Plugin {
         } else if (file) {
           seen.add(file.path);
         }
+      } else if (leaf.view.getViewType() === "empty") {
+        toRemove.push(leaf);
       }
     });
 
@@ -65,10 +98,51 @@ export default class TabSwitcher extends Plugin {
     toRemove.forEach(leaf => leaf.detach());
   }
 
+  handleKeyDown(event: KeyboardEvent) {
+    if (event.key === 'Control') {
+      this.tabViewInstance = new TabViewModel({
+        target: this.app.workspace.containerEl,
+        props: {
+          app: this.app,
+          removeDuplicateTabs: this.removeDuplicateTabs.bind(this),
+        },
+      });
+    }
+  }
+
+  handleKeyUp(event: KeyboardEvent) {
+    if (event.key === 'Control' && this.tabViewInstance) {
+      // ctrl キーが離されたときに SearchModel を閉じる
+      this.tabViewInstance.$destroy();
+      this.tabViewInstance = null;
+    }
+  }
+
+  openSearchModel() {
+    const { app } = this;
+    if (this.searchModelInstance) {
+      this.searchModelInstance.$destroy();
+      this.searchModelInstance = null;
+    }
+    this.searchModelInstance = new SearchModel({
+      target: app.workspace.containerEl,
+      props: {
+        app,
+        removeDuplicateTabs: this.removeDuplicateTabs.bind(this),
+        highlightCurrentTab: true // 現在のタブをハイライトするためのプロパティ
+      },
+    });
+  }
+
   // プラグインがアンロードされるときにコンポーネントを破棄
   onunload() {
     if (this.searchModelInstance) {
       this.searchModelInstance.$destroy();
     }
+    if (this.tabViewInstance) {
+      this.tabViewInstance.$destroy();
+    }
+    document.removeEventListener('keydown', this.handleKeyDown.bind(this));
+    document.removeEventListener('keyup', this.handleKeyUp.bind(this));
   }
 }

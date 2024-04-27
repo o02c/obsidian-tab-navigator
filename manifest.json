@@ -1,6 +1,6 @@
 {
-    "id": "tab-navigator-dev",
-    "name": "Tab Navigator Dev",
+    "id": "tab-navigator",
+    "name": "Tab Navigator",
     "version": "0.2.0",
     "minAppVersion": "1.5.12",
     "description": "Simple Tab Switcher, search open tabs.",

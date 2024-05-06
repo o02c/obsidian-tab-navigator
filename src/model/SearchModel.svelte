@@ -6,6 +6,7 @@
 	export let removeDuplicateTabs: () => void;
 
 	const dispatch = createEventDispatcher();
+	let modalContainer: HTMLDivElement;
 
 	let searchInput = "";
 	let allLeaves: Array<{
@@ -27,12 +28,22 @@
 	}>;
 
 	onMount(() => {
+		// モーダルの外側をクリックしたときにモーダルを閉じる
+		function handleClickOutside(event: MouseEvent) {
+			const path = event.composedPath();
+			if (!path.includes(modalContainer)) {
+				dispatch("close");
+			}
+		}
+		document.addEventListener("click", handleClickOutside);
+
 		loadLeaves();
 		window.addEventListener("keydown", handleKeyDown);
 		if (inputElement) {
 			inputElement.focus();
 		}
 		return () => {
+			document.removeEventListener("click", handleClickOutside);
 			window.removeEventListener("keydown", handleKeyDown);
 		};
 	});
@@ -99,17 +110,17 @@
 			event.preventDefault();
 			removeDuplicateTabs();
 			loadLeaves();
-      filterSearchResults();
+			filterSearchResults();
 		} else if (event.key === "Tab") {
 			event.preventDefault();
-      const prevIndex = selectedIndex;
+			const prevIndex = selectedIndex;
 			removeTab(selectedIndex);
 			loadLeaves();
-      filterSearchResults();
+			filterSearchResults();
 			if (searchResults.length == 0) {
 				dispatch("close");
 			}
-      selectedIndex = Math.min(prevIndex, searchResults.length - 1);
+			selectedIndex = Math.min(prevIndex, searchResults.length - 1);
 		}
 	}
 
@@ -126,7 +137,7 @@
 
 <div class="modal-container mod-dim">
 	<div class="modal-bg" style="opacity: 0.85;"></div>
-	<div class="prompt">
+	<div bind:this={modalContainer} class="prompt">
 		<div class="prompt-input-container">
 			<input
 				class="prompt-input"
@@ -145,9 +156,9 @@
 					class="suggestion-item mod-complex {index === selectedIndex
 						? 'is-selected'
 						: ''}"
-          tabindex="0"
+					tabindex="0"
 					role="button"
-          on:mouseenter={() => selectedIndex = index} 
+					on:mouseenter={() => (selectedIndex = index)}
 					on:click={() => selectItem(index)}
 					on:keydown={(event) =>
 						event.key === "Enter" && selectItem(index)}

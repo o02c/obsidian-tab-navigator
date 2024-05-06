@@ -5,22 +5,30 @@
 	// export let removeDuplicateTabs: () => void;
 
 	const dispatch = createEventDispatcher();
+	let modalContainer: HTMLDivElement;
 
 	let allLeaves: Array<{
 		leaf: WorkspaceLeaf;
 		titleOrName: string;
-		details: string;
 	}> = [];
 	let tabList: Array<{
 		leaf: WorkspaceLeaf;
 		titleOrName: string;
-		details: string;
 	}> = [];
 	let selectedIndex = 0;
 	let inputElement: HTMLInputElement;
 	let isModalVisible = false; // モーダル表示状態の制御変数
 
 	onMount(() => {
+		// モーダルの外側をクリックしたときにモーダルを閉じる
+		function handleClickOutside(event: MouseEvent) {
+			const path = event.composedPath();
+			if (!path.includes(modalContainer)) {
+				dispatch("close");
+			}
+		}
+		document.addEventListener("click", handleClickOutside);
+
 		window.addEventListener("keydown", handleKeyDown);
 		if (inputElement) {
 			inputElement.focus();
@@ -30,6 +38,7 @@
 		app.workspace.on("active-leaf-change", updateSelectedIndex);
 
 		return () => {
+			document.removeEventListener("click", handleClickOutside);
 			window.removeEventListener("keydown", handleKeyDown);
 			app.workspace.off("active-leaf-change", updateSelectedIndex);
 		};
@@ -50,7 +59,7 @@
 					.replace(/_/g, " ")
 					.replace(/^\w/, (c) => c.toUpperCase());
 			}
-			allLeaves.push({ leaf, titleOrName, details: viewType });
+			allLeaves.push({ leaf, titleOrName });
 		});
 		tabList = allLeaves;
 		// 現在ActiveなLeafを選択状態に設定
@@ -89,9 +98,9 @@
 	<!-- モーダルの表示条件を追加 -->
 	<div class="modal-container mod-dim">
 		<div class="modal-bg" style="opacity: 0.85;"></div>
-		<div class="prompt">
+		<div bind:this={modalContainer} class="prompt">
 			<div class="prompt-results">
-				{#each tabList as { leaf, titleOrName, details }, index}
+				{#each tabList as { leaf, titleOrName }, index}
 					<div
 						class="suggestion-item mod-complex {index ===
 						selectedIndex

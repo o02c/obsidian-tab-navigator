@@ -3,6 +3,7 @@ import SearchModel from './model/SearchModel.svelte';
 import TabViewModel from './model/TabViewModel.svelte';
 import { DEFAULT_SETTINGS, TabNavigatorSettingTab } from './setting';
 import type { PluginSettings } from './setting';
+import { modalVisible } from './stores/modalStore';
 
 export default class TabSwitcher extends Plugin {
   settings: PluginSettings | null = null;
@@ -51,17 +52,27 @@ export default class TabSwitcher extends Plugin {
         this.removeDuplicateTabs();
       },
     });
+  }
+
+  async loadSettings() {
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 
     // タブビューを表示する
     if (this.settings?.enableTabView) {
       // キーボードイベントのリスナーを追加
       document.addEventListener('keydown', this.handleKeyDown.bind(this));
       document.addEventListener('keyup', this.handleKeyUp.bind(this));
-    }
-  }
 
-  async loadSettings() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+      this.tabViewInstance = new TabViewModel({
+        target: this.app.workspace.containerEl,
+        props: {
+          app: this.app,
+        },
+      });
+    } else if (this.tabViewInstance) {
+      this.tabViewInstance.$destroy();
+      this.tabViewInstance = null;
+    }
   }
 
   async saveSettings() {
@@ -100,21 +111,13 @@ export default class TabSwitcher extends Plugin {
 
   handleKeyDown(event: KeyboardEvent) {
     if (event.key === 'Control') {
-      this.tabViewInstance = new TabViewModel({
-        target: this.app.workspace.containerEl,
-        props: {
-          app: this.app,
-          removeDuplicateTabs: this.removeDuplicateTabs.bind(this),
-        },
-      });
+      modalVisible.set(true); // モーダルを表示
     }
   }
 
   handleKeyUp(event: KeyboardEvent) {
-    if (event.key === 'Control' && this.tabViewInstance) {
-      // ctrl キーが離されたときに SearchModel を閉じる
-      this.tabViewInstance.$destroy();
-      this.tabViewInstance = null;
+    if (event.key === 'Control' || event.key === 'Escape') {
+      modalVisible.set(false); // モーダルを非表示
     }
   }
 
@@ -129,7 +132,6 @@ export default class TabSwitcher extends Plugin {
       props: {
         app,
         removeDuplicateTabs: this.removeDuplicateTabs.bind(this),
-        highlightCurrentTab: true // 現在のタブをハイライトするためのプロパティ
       },
     });
   }

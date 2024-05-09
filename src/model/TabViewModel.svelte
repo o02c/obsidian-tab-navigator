@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount, createEventDispatcher } from "svelte";
+	import { modalVisible } from "../stores/modalStore";
 	import { App, WorkspaceLeaf, FileView } from "obsidian";
 	export let app: App;
 	// export let removeDuplicateTabs: () => void;
@@ -17,35 +18,39 @@
 	}> = [];
 	let selectedIndex = 0;
 	let inputElement: HTMLInputElement;
-	let isModalVisible = false; // モーダル表示状態の制御変数
+
+	// ストアを購読
+	let isModalVisible: boolean;
+	const unsubscribe = modalVisible.subscribe((value) => {
+		isModalVisible = value;
+	});
 
 	onMount(() => {
 		// モーダルの外側をクリックしたときにモーダルを閉じる
 		function handleClickOutside(event: MouseEvent) {
+			if (!isModalVisible) {
+				return;
+			}
 			const path = event.composedPath();
 			if (!path.includes(modalContainer)) {
-				dispatch("close");
+				isModalVisible = false;
 			}
 		}
+
+		// eventの登録
 		document.addEventListener("click", handleClickOutside);
-
-		window.addEventListener("keydown", handleKeyDown);
-		if (inputElement) {
-			inputElement.focus();
-		}
-
-		// タブの変更を検知するイベントリスナーを追加
+		window.addEventListener("keydown", handleKeyDown, true);
 		app.workspace.on("active-leaf-change", updateSelectedIndex);
 
 		return () => {
 			document.removeEventListener("click", handleClickOutside);
-			window.removeEventListener("keydown", handleKeyDown);
+			window.removeEventListener("keydown", handleKeyDown, true);
 			app.workspace.off("active-leaf-change", updateSelectedIndex);
+			unsubscribe(); // ストアの購読を解除
 		};
 	});
 
 	function updateSelectedIndex() {
-		isModalVisible ||= true;
 		allLeaves = [];
 		app.workspace.iterateRootLeaves((leaf: WorkspaceLeaf) => {
 			let titleOrName: string;
@@ -75,8 +80,11 @@
 	}
 
 	function handleKeyDown(event: KeyboardEvent) {
+		if (!isModalVisible) {
+			return;
+		}
 		if (event.key === "Backspace") {
-			// event.preventDefault();
+			event.stopPropagation(); // イベントの伝播を停止
 			removeTab(selectedIndex);
 		}
 	}
@@ -84,7 +92,7 @@
 	function selectItem(index: number) {
 		const selectedItem = tabList[index];
 		app.workspace.setActiveLeaf(selectedItem.leaf);
-		dispatch("close");
+		isModalVisible = false;
 	}
 
 	function removeTab(index: number) {
@@ -95,7 +103,7 @@
 </script>
 
 {#if isModalVisible}
-	<!-- モーダルの表示条件を追加 -->
+	<!-- モーダルの表示 -->
 	<div class="modal-container mod-dim">
 		<div class="modal-bg" style="opacity: 0.85;"></div>
 		<div bind:this={modalContainer} class="prompt">
@@ -109,7 +117,7 @@
 						tabindex="0"
 						role="button"
 						on:mouseenter={() => (selectedIndex = index)}
-						on:click={() => selectItem(index)}
+						on:mousedown={() => selectItem(index)}
 						on:keydown={(event) =>
 							event.key === "Enter" && selectItem(index)}
 					>

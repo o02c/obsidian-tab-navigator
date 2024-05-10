@@ -52,24 +52,24 @@ export default class TabSwitcher extends Plugin {
         this.removeDuplicateTabs();
       },
     });
-  }
-
-  async loadSettings() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 
     // タブビューを表示する
     if (this.settings?.enableTabView) {
-      // キーボードイベントのリスナーを追加
-      document.addEventListener('keydown', this.handleKeyDown.bind(this));
-      document.addEventListener('keyup', this.handleKeyUp.bind(this));
-
       this.tabViewInstance = new TabViewModel({
         target: this.app.workspace.containerEl,
         props: {
           app: this.app,
         },
       });
-    } else if (this.tabViewInstance) {
+      document.addEventListener('keydown', this.handleKeyDown.bind(this));
+      document.addEventListener('keyup', this.handleKeyUp.bind(this));
+	}
+  }
+
+  async loadSettings() {
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+
+    if (!this.settings?.enableTabView && this.tabViewInstance) {
       this.tabViewInstance.$destroy();
       this.tabViewInstance = null;
     }

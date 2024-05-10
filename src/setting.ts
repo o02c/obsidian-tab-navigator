@@ -25,7 +25,7 @@ export class TabNavigatorSettingTab extends PluginSettingTab {
         const settings = this.plugin.settings;
         if (settings) {
             new Setting(containerEl)
-                .setName('Enable Tab View')
+                .setName('(Beta) Enable Tab View')
                 .setDesc('Display tab list while holding Ctrl key')
                 .addToggle(toggle => toggle
                     .setValue(settings.enableTabView)

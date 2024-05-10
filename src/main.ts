@@ -53,27 +53,21 @@ export default class TabSwitcher extends Plugin {
       },
     });
 
-    // タブビューを表示する
-    if (this.settings?.enableTabView) {
-      this.tabViewInstance = new TabViewModel({
-        target: this.app.workspace.containerEl,
-        props: {
-          app: this.app,
-        },
-      });
-      document.addEventListener('keydown', this.handleKeyDown.bind(this));
-      document.addEventListener('keyup', this.handleKeyUp.bind(this));
-	}
+    // // タブビューを表示する
+    // if (this.settings?.enableTabView) {
+    //   document.addEventListener('keydown', this.handleKeyDown.bind(this));
+    //   document.addEventListener('keyup', this.handleKeyUp.bind(this));
+    // }
   }
 
-  async loadSettings() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+  // async loadSettings() {
+  //   this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 
-    if (!this.settings?.enableTabView && this.tabViewInstance) {
-      this.tabViewInstance.$destroy();
-      this.tabViewInstance = null;
-    }
-  }
+  //   if (!this.settings?.enableTabView && this.tabViewInstance) {
+  //     this.tabViewInstance.$destroy();
+  //     this.tabViewInstance = null;
+  //   }
+  // }
 
   async saveSettings() {
     await this.saveData(this.settings);
@@ -109,17 +103,32 @@ export default class TabSwitcher extends Plugin {
     toRemove.forEach(leaf => leaf.detach());
   }
 
-  handleKeyDown(event: KeyboardEvent) {
-    if (event.key === 'Control') {
-      modalVisible.set(true); // モーダルを表示
-    }
-  }
+  // handleKeyDown(event: KeyboardEvent) {
+  //   if (!this.settings?.enableTabView) {
+  //     return;
+  //   }
+  //   if (event.ctrlKey && event.key === 'Tab') { // Ctrl+Tabを認識するように変更
+  //     event.preventDefault();
+  //     if (!this.tabViewInstance) {
+  //       this.tabViewInstance = new TabViewModel({
+  //         target: this.app.workspace.containerEl,
+  //         props: {
+  //           app: this.app,
+  //         },
+  //       });
+  //     }
+  //     modalVisible.set(true); // モーダルを表示
+  //   }
+  // }
 
-  handleKeyUp(event: KeyboardEvent) {
-    if (event.key === 'Control' || event.key === 'Escape') {
-      modalVisible.set(false); // モーダルを非表示
-    }
-  }
+  // handleKeyUp(event: KeyboardEvent) {
+  //   if (!this.settings?.enableTabView) {
+  //     return;
+  //   }
+  //   if (event.key === 'Control' || event.key === 'Escape') {
+  //     modalVisible.set(false); // モーダルを非表示
+  //   }
+  // }
 
   openSearchModel() {
     const { app } = this;

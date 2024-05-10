@@ -30,13 +30,17 @@ jobs:
           tag="${GITHUB_REF#refs/tags/}"
           jq --arg version "$tag" '.version = $version' manifest.json > temp.json && mv temp.json manifest.json
 
+      - name: Create and checkout new branch
+        run: |
+          git checkout -b update-version-${{ github.ref_name }}
+
       - name: Commit updated manifest
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add manifest.json
           git commit -m "Automatically update manifest version to ${{ github.ref_name }} by GitHub Actions"
-          git push origin HEAD:main
+          git push origin update-version-${{ github.ref_name }}
 
       - name: Create Pull Request
         uses: repo-sync/pull-request@v2

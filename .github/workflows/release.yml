@@ -35,8 +35,26 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add manifest.json
-          git commit -m "auto update manifest version to ${{ github.ref_name }} by GitHub Actions"
-          git push
+          git commit -m "Automatically update manifest version to ${{ github.ref_name }} by GitHub Actions"
+          git push origin HEAD:main
+
+      - name: Create Pull Request
+        uses: repo-sync/pull-request@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          pr_title: "Update manifest version to ${{ github.ref_name }}"
+          pr_body: "Automatically update manifest version by GitHub Actions"
+          destination_branch: "main"
+          source_branch: "update-version-${{ github.ref_name }}"
+
+      - name: Auto merge
+        uses: pascalgn/automerge-action@v0.14.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          merge_method: merge
+          commit_message_template: "Merge pull request for version update"
+          pull_request_filter_labels: "automerge"
 
       - name: Create release
         env:

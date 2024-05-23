@@ -30,6 +30,14 @@ TabNavigator does not transmit any user data externally. All data is kept locall
 
 TabNavigator is designed to be lightweight and does not negatively impact Obsidian's performance. It is regularly updated to ensure compatibility with new versions of Obsidian.
 
+## Pricing
+
+This plugin is provided to everyone for free, however if you would like to
+say thanks or help support continued development, feel free to send a little
+my way through one of the following methods:
+
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/tgrosinger?style=social)](https://github.com/sponsors/o02c)
+
 ## Support
 
 For questions or issues regarding TabNavigator, please use the GitHub Issues page for support. Feedback and feature requests are also welcome.

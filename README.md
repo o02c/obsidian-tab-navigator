@@ -36,7 +36,7 @@ This plugin is provided to everyone for free, however if you would like to
 say thanks or help support continued development, feel free to send a little
 my way through one of the following methods:
 
-[![GitHub Sponsors](https://img.shields.io/github/sponsors/tgrosinger?style=social)](https://github.com/sponsors/o02c)
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/o02c?style=social)](https://github.com/sponsors/o02c)
 
 ## Support
 

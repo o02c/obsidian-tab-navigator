@@ -14,20 +14,23 @@
 	let allLeaves: Array<{
 		leaf: WorkspaceLeaf;
 		titleOrName: string;
+		aliases: string[];
 		tags: string[];
 		details: string;
 	}> = [];
 	let searchResults: Array<{
 		leaf: WorkspaceLeaf;
 		titleOrName: string;
-		details: string;
+		aliases: string[];
 		tags: string[];
+		details: string;
 	}> = [];
 	let selectedIndex = 0;
 	let inputElement: HTMLInputElement;
 	let fuse: Fuse<{
 		leaf: WorkspaceLeaf;
 		titleOrName: string;
+		aliases: string[];
 		tags: string[];
 		details: string;
 	}>;
@@ -58,16 +61,22 @@
 		app.workspace.iterateRootLeaves((leaf: WorkspaceLeaf) => {
 			let titleOrName: string;
 			let details: string;
+			let aliases: string[] = [];
 			let tags: string[] = [];
 			if (leaf.view instanceof FileView) {
 				const file = leaf.view.file as TFile;
 				titleOrName = file.basename;
 				details = file.path;
+				if (settings?.enableAliasSearch) {
+					const fileCache = app.metadataCache.getFileCache(file);
+					if (fileCache?.frontmatter?.aliases) {
+						aliases = fileCache.frontmatter.aliases;
+					}
+				}
 				if (settings?.enableTagSearch) {
 					const fileCache = app.metadataCache.getFileCache(file);
 					if (fileCache?.frontmatter?.tags) {
 						tags = fileCache.frontmatter.tags;
-						console.log(tags);
 					}
 				}
 			} else {
@@ -77,7 +86,7 @@
 					.replace(/^\w/, (c) => c.toUpperCase());
 				details = leaf.view.getViewType();
 			}
-			allLeaves.push({ leaf, titleOrName, tags, details });
+			allLeaves.push({ leaf, titleOrName, aliases, tags, details });
 		});
 		searchResults = allLeaves;
 
@@ -164,7 +173,7 @@
 			<div class="prompt-input-cta"></div>
 		</div>
 		<div class="prompt-results">
-			{#each searchResults as { leaf, titleOrName, details, tags }, index}
+			{#each searchResults as { leaf, titleOrName, aliases, details, tags }, index}
 				<div
 					class="suggestion-item mod-complex {index === selectedIndex
 						? 'is-selected'
@@ -179,6 +188,13 @@
 					<div class="suggestion-content">
 						<div class="suggestion-title">
 							<span>{titleOrName}</span>
+							{#if settings?.enableAliasSearch && aliases.length > 0}
+								<span class="suggestion-note qsp-note">
+									{#each aliases as alias}
+										{" "}<span class="alias">@{alias}</span>
+									{/each}
+								</span>
+							{/if}
 							{#if settings?.enableTagSearch && tags.length > 0}
 								<span class="suggestion-note qsp-note">
 									{#each tags as tag}

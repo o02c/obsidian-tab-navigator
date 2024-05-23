@@ -8,6 +8,7 @@ TabNavigator is a simple tab switcher for Obsidian.
   - Search targets:
     - file name
     - file path
+    - frontmatter aliases (toggleable via the "Enable Alias Search" option, enabled by default)
     - frontmatter tags (toggleable via the "Enable Tag Search" option, enabled by default)
 - **Delete Duplicate Tabs**: Delete duplicate tabs from the switcher interface (or command) to manage your workspace efficiently. (tab-navigator:delete-duplicate-tabs)
 
@@ -19,7 +20,7 @@ TabNavigator is a simple tab switcher for Obsidian.
 
 ## Usage
 
-Once TabNavigator is enabled, it will automatically integrate with Obsidian's tab system. 
+Once TabNavigator is enabled, it will automatically integrate with Obsidian's tab system.
 
 ## Privacy and Security
 

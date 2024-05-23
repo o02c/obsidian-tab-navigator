@@ -1,17 +1,16 @@
 import { Plugin, WorkspaceLeaf, FileView } from 'obsidian';
 import SearchModel from './model/SearchModel.svelte';
-// import TabViewModel from './model/TabViewModel.svelte';
-// import { modalVisible } from './stores/modalStore';
+import { DEFAULT_SETTINGS, TabNavigatorSettingTab } from './setting';
+import type { PluginSettings } from './setting';
 
 export default class TabSwitcher extends Plugin {
   searchModelInstance: SearchModel | null = null; // SearchModelのインスタンスを保持するためのプロパティ
-  // settings: PluginSettings | null = null;
-  // tabViewInstance: TabViewModel | null = null;
+  settings: PluginSettings | null = null;
 
 
   async onload() {
-    // await this.loadSettings();
-    // this.addSettingTab(new TabNavigatorSettingTab(this.app, this))
+    await this.loadSettings();
+    this.addSettingTab(new TabNavigatorSettingTab(this.app, this))
 
     this.addCommand({
       id: 'search-tabs',
@@ -28,6 +27,7 @@ export default class TabSwitcher extends Plugin {
           target: app.workspace.containerEl,
           props: {
             app,
+            settings: this.settings,
             removeDuplicateTabs: this.removeDuplicateTabs.bind(this),
           },
         });
@@ -50,33 +50,15 @@ export default class TabSwitcher extends Plugin {
         this.removeDuplicateTabs();
       },
     });
-
-    // // タブビューを表示する
-    // if (this.settings?.enableTabView) {
-    //   document.addEventListener('keydown', this.handleKeyDown.bind(this));
-    //   document.addEventListener('keyup', this.handleKeyUp.bind(this));
-    // }
   }
 
-  // async loadSettings() {
-  //   this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+  async loadSettings() {
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+  }
 
-  //   if (!this.settings?.enableTabView && this.tabViewInstance) {
-  //     this.tabViewInstance.$destroy();
-  //     this.tabViewInstance = null;
-  //   }
-  // }
-
-  // async saveSettings() {
-  //   await this.saveData(this.settings);
-  //   if (this.settings?.enableTabView) {
-  //     document.removeEventListener('keydown', this.handleKeyDown.bind(this));
-  //     document.removeEventListener('keyup', this.handleKeyUp.bind(this));
-  //     // キーボードイベントのリスナーを追加
-  //     document.addEventListener('keydown', this.handleKeyDown.bind(this));
-  //     document.addEventListener('keyup', this.handleKeyUp.bind(this));
-  //   }
-  // }
+  async saveSettings() {
+    await this.saveData(this.settings);
+  }
 
   // 重複するタブを削除するメソッド
   removeDuplicateTabs() {
@@ -101,32 +83,6 @@ export default class TabSwitcher extends Plugin {
     toRemove.forEach(leaf => leaf.detach());
   }
 
-  // handleKeyDown(event: KeyboardEvent) {
-  //   if (!this.settings?.enableTabView) {
-  //     return;
-  //   }
-  //   if (event.ctrlKey && event.key === 'Tab') { // Ctrl+Tabを認識するように変更
-  //     event.preventDefault();
-  //     if (!this.tabViewInstance) {
-  //       this.tabViewInstance = new TabViewModel({
-  //         target: this.app.workspace.containerEl,
-  //         props: {
-  //           app: this.app,
-  //         },
-  //       });
-  //     }
-  //     modalVisible.set(true); // モーダルを表示
-  //   }
-  // }
-
-  // handleKeyUp(event: KeyboardEvent) {
-  //   if (!this.settings?.enableTabView) {
-  //     return;
-  //   }
-  //   if (event.key === 'Control' || event.key === 'Escape') {
-  //     modalVisible.set(false); // モーダルを非表示
-  //   }
-  // }
 
   openSearchModel() {
     const { app } = this;
@@ -148,10 +104,5 @@ export default class TabSwitcher extends Plugin {
     if (this.searchModelInstance) {
       this.searchModelInstance.$destroy();
     }
-    // if (this.tabViewInstance) {
-    //   this.tabViewInstance.$destroy();
-    // }
-    // document.removeEventListener('keydown', this.handleKeyDown.bind(this));
-    // document.removeEventListener('keyup', this.handleKeyUp.bind(this));
   }
 }

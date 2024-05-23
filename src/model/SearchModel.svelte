@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { onMount, createEventDispatcher } from "svelte";
 	import Fuse from "fuse.js";
-	import { App, WorkspaceLeaf, FileView } from "obsidian";
+	import { App, WorkspaceLeaf, FileView, TFile } from "obsidian";
+	import type { PluginSettings } from "../setting";
 	export let app: App;
 	export let removeDuplicateTabs: () => void;
+	export let settings: PluginSettings | null;
 
 	const dispatch = createEventDispatcher();
 	let modalContainer: HTMLDivElement;
@@ -12,18 +14,21 @@
 	let allLeaves: Array<{
 		leaf: WorkspaceLeaf;
 		titleOrName: string;
+		tags: string[];
 		details: string;
 	}> = [];
 	let searchResults: Array<{
 		leaf: WorkspaceLeaf;
 		titleOrName: string;
 		details: string;
+		tags: string[];
 	}> = [];
 	let selectedIndex = 0;
 	let inputElement: HTMLInputElement;
 	let fuse: Fuse<{
 		leaf: WorkspaceLeaf;
 		titleOrName: string;
+		tags: string[];
 		details: string;
 	}>;
 
@@ -53,10 +58,18 @@
 		app.workspace.iterateRootLeaves((leaf: WorkspaceLeaf) => {
 			let titleOrName: string;
 			let details: string;
+			let tags: string[] = [];
 			if (leaf.view instanceof FileView) {
-				const file = leaf.view.file as any; // 型アサーションを使用してエラーを修正
+				const file = leaf.view.file as TFile;
 				titleOrName = file.basename;
 				details = file.path;
+				if (settings?.enableTagSearch) {
+					const fileCache = app.metadataCache.getFileCache(file);
+					if (fileCache?.frontmatter?.tags) {
+						tags = fileCache.frontmatter.tags;
+						console.log(tags);
+					}
+				}
 			} else {
 				titleOrName = leaf.view
 					.getViewType()
@@ -64,14 +77,14 @@
 					.replace(/^\w/, (c) => c.toUpperCase());
 				details = leaf.view.getViewType();
 			}
-			allLeaves.push({ leaf, titleOrName, details });
+			allLeaves.push({ leaf, titleOrName, tags, details });
 		});
 		searchResults = allLeaves;
 
 		// Fuse.jsの設定
 		const options = {
 			includeScore: true,
-			keys: ["titleOrName", "details"],
+			keys: ["titleOrName", "details", "tags"],
 		};
 		fuse = new Fuse(allLeaves, options);
 	}
@@ -151,7 +164,7 @@
 			<div class="prompt-input-cta"></div>
 		</div>
 		<div class="prompt-results">
-			{#each searchResults as { leaf, titleOrName, details }, index}
+			{#each searchResults as { leaf, titleOrName, details, tags }, index}
 				<div
 					class="suggestion-item mod-complex {index === selectedIndex
 						? 'is-selected'
@@ -166,6 +179,13 @@
 					<div class="suggestion-content">
 						<div class="suggestion-title">
 							<span>{titleOrName}</span>
+							{#if settings?.enableTagSearch && tags.length > 0}
+								<span class="suggestion-note qsp-note">
+									{#each tags as tag}
+										{" "}<span class="tag">#{tag}</span>
+									{/each}
+								</span>
+							{/if}
 						</div>
 						<div class="suggestion-note qsp-note">
 							<span class="qsp-path-indicator">

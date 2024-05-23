@@ -3,10 +3,12 @@ import TabViewPlugin from "./main";
 
 export interface PluginSettings {
     enableTagSearch: boolean;
+    enableAliasSearch: boolean;
 }
 
 export const DEFAULT_SETTINGS: Partial<PluginSettings> = {
     enableTagSearch: true,
+    enableAliasSearch: true,
 };
 
 export class TabNavigatorSettingTab extends PluginSettingTab {
@@ -24,6 +26,16 @@ export class TabNavigatorSettingTab extends PluginSettingTab {
 
         const settings = this.plugin.settings;
         if (settings) {
+            new Setting(containerEl)
+                .setName('Enable Alias Search')
+                .setDesc('Enable or disable the ability to search articles using aliases.')
+                .addToggle(toggle => toggle
+                    .setValue(settings.enableAliasSearch)
+                    .onChange(value => {
+                        settings.enableTagSearch = value;
+                        this.plugin.saveSettings();
+                    })
+                );
             new Setting(containerEl)
                 .setName('Enable Tag Search')
                 .setDesc('Enable or disable the ability to search articles using tags.')

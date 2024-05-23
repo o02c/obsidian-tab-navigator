@@ -95,6 +95,7 @@ export default class TabSwitcher extends Plugin {
       props: {
         app,
         removeDuplicateTabs: this.removeDuplicateTabs.bind(this),
+        settings: this.settings,
       },
     });
   }

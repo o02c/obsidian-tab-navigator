@@ -5,5 +5,5 @@
   "minAppVersion": "1.5.12",
   "description": "Simple Tab Switcher, search open tabs.",
   "author": "o02c",
-  "isDesktopOnly": false
+  "isDesktopOnly": true
 }

@@ -24,7 +24,8 @@ export default class TabSwitcher extends Plugin {
         }
         // 新しいインスタンスを作成
         this.searchModelInstance = new SearchModel({
-          target: app.workspace.containerEl,
+          // target: app.workspace.containerEl,
+          target: document.body,
           props: {
             app,
             settings: this.settings,

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, createEventDispatcher } from "svelte";
 	import Fuse from "fuse.js";
-	import { App, WorkspaceLeaf, FileView, TFile } from "obsidian";
+	import { App, WorkspaceLeaf, FileView, TFile, getIcon } from "obsidian";
 	import type { PluginSettings } from "../setting";
 	export let app: App;
 	export let removeDuplicateTabs: () => void;
@@ -17,6 +17,7 @@
 		aliases: string[];
 		tags: string[];
 		details: string;
+		extention: string | null;
 	}> = [];
 	let searchResults: Array<{
 		leaf: WorkspaceLeaf;
@@ -24,6 +25,7 @@
 		aliases: string[];
 		tags: string[];
 		details: string;
+		extention: string | null;
 	}> = [];
 	let selectedIndex = 0;
 	let inputElement: HTMLInputElement;
@@ -33,6 +35,7 @@
 		aliases: string[];
 		tags: string[];
 		details: string;
+		extention: string | null;
 	}>;
 
 	onMount(() => {
@@ -63,10 +66,16 @@
 			let details: string;
 			let aliases: string[] = [];
 			let tags: string[] = [];
+			let extention: string | null = null;
 			if (leaf.view instanceof FileView) {
 				const file = leaf.view.file as TFile;
 				titleOrName = file.basename;
-				details = file.path;
+				if (settings?.includeFileNameInPath) {
+					details = file.path;
+				} else {
+					details = file.parent?.path ?? "";
+				}
+				extention = file.extension;
 				if (settings?.enableAliasSearch) {
 					const fileCache = app.metadataCache.getFileCache(file);
 					if (fileCache?.frontmatter?.aliases) {
@@ -84,16 +93,23 @@
 					.getViewType()
 					.replace(/_/g, " ")
 					.replace(/^\w/, (c) => c.toUpperCase());
-				details = leaf.view.getViewType();
+				details = ":" + leaf.view.getViewType();
 			}
-			allLeaves.push({ leaf, titleOrName, aliases, tags, details });
+			allLeaves.push({
+				leaf,
+				titleOrName,
+				aliases,
+				tags,
+				details,
+				extention,
+			});
 		});
 		searchResults = allLeaves;
 
 		// Fuse.jsの設定
 		const options = {
 			includeScore: true,
-			keys: ["titleOrName", "details", "tags"],
+			keys: ["titleOrName", "details", "tags", "aliases", "extention"],
 		};
 		fuse = new Fuse(allLeaves, options);
 	}
@@ -168,97 +184,104 @@
 				bind:this={inputElement}
 				bind:value={searchInput}
 				on:input={(event) => handleInput(event)}
-				placeholder="Find or create a note..."
+				placeholder="Find a note..."
 			/>
 			<div class="prompt-input-cta"></div>
 		</div>
 		<div class="prompt-results">
-			{#each searchResults as { leaf, titleOrName, aliases, details, tags }, index}
-				<div
-					class="suggestion-item mod-complex {index === selectedIndex
-						? 'is-selected'
-						: ''}"
-					tabindex="0"
-					role="button"
-					on:mouseenter={() => (selectedIndex = index)}
-					on:click={() => selectItem(index)}
-					on:keydown={(event) =>
-						event.key === "Enter" && selectItem(index)}
-				>
-					<div class="suggestion-content">
-						<div class="suggestion-title">
-							<span>{titleOrName}</span>
-							{#if settings?.enableAliasSearch && aliases.length > 0}
-								<span class="suggestion-note qsp-note">
-									{#each aliases as alias}
-										{" "}<span class="alias">@{alias}</span>
-									{/each}
-								</span>
-							{/if}
-							{#if settings?.enableTagSearch && tags.length > 0}
-								<span class="suggestion-note qsp-note">
-									{#each tags as tag}
-										{" "}<span class="tag">#{tag}</span>
-									{/each}
-								</span>
-							{/if}
-						</div>
-						<div class="suggestion-note qsp-note">
-							<span class="qsp-path-indicator">
-								{#if leaf.view instanceof FileView}
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										width="24"
-										height="24"
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										stroke-width="2"
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										class="svg-icon lucide-file-text"
-										><path
-											d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-										></path><polyline
-											points="14 2 14 8 20 8"
-										></polyline><line
-											x1="16"
-											y1="13"
-											x2="8"
-											y2="13"
-										></line><line
-											x1="16"
-											y1="17"
-											x2="8"
-											y2="17"
-										></line><polyline points="10 9 9 9 8 9"
-										></polyline></svg
-									>
-								{:else}
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										width="24"
-										height="24"
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										stroke-width="2"
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										class="svg-icon lucide-folder-open"
-										><path
-											d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"
-										></path></svg
-									>
+			{#each searchResults as { leaf, titleOrName, aliases, details, tags, extention }, index}
+				{#if settings?.showFilePath}
+					<div
+						class="suggestion-item mod-complex {index ===
+						selectedIndex
+							? 'is-selected'
+							: ''}"
+						tabindex="0"
+						role="button"
+						on:mouseenter={() => (selectedIndex = index)}
+						on:click={() => selectItem(index)}
+						on:keydown={(event) =>
+							event.key === "Enter" && selectItem(index)}
+					>
+						<div class="suggestion-content">
+							<div class="suggestion-title">
+								<span
+									>{titleOrName}{extention &&
+									extention !== "md"
+										? "." + extention
+										: ""}</span
+								>
+								{#if settings?.enableAliasSearch && aliases.length > 0}
+									<span class="suggestion-note qsp-note">
+										{#each aliases as alias}
+											{" "}<span class="alias"
+												>@{alias}</span
+											>
+										{/each}
+									</span>
 								{/if}
-							</span>
-							<span class="qsp-path">{details}</span>
+								{#if settings?.enableTagSearch && tags.length > 0}
+									<span class="suggestion-note qsp-note">
+										{#each tags as tag}
+											{" "}<span class="tag">#{tag}</span>
+										{/each}
+									</span>
+								{/if}
+							</div>
+							<div class="suggestion-note qsp-note">
+								<span class="qsp-path-indicator">
+									{@html getIcon(leaf.getIcon())?.outerHTML ??
+										""}
+								</span>
+								<span class="qsp-path">{details}</span>
+							</div>
 						</div>
 					</div>
-					<div class="suggestion-aux qsp-aux">
-						<!-- ここに追加のアイコンや情報を表示 -->
+				{:else}
+					<div
+						class="suggestion-item mod-complex {index ===
+						selectedIndex
+							? 'is-selected'
+							: ''}"
+						tabindex="0"
+						role="button"
+						on:mouseenter={() => (selectedIndex = index)}
+						on:click={() => selectItem(index)}
+						on:keydown={(event) =>
+							event.key === "Enter" && selectItem(index)}
+					>
+						<div class="suggestion-content">
+							<div class="suggestion-title">
+								<span class="qsp-path-indicator">
+									{@html getIcon(leaf.getIcon())?.outerHTML ??
+										""}
+								</span>
+								<span
+									>{titleOrName}{extention &&
+									extention !== "md"
+										? "." + extention
+										: ""}</span
+								>
+								{#if settings?.enableAliasSearch && aliases.length > 0}
+									<span class="suggestion-note qsp-note">
+										{#each aliases as alias}
+											{" "}<span class="alias"
+												>@{alias}</span
+											>
+										{/each}
+									</span>
+								{/if}
+								{#if settings?.enableTagSearch && tags.length > 0}
+									<span class="suggestion-note qsp-note">
+										{#each tags as tag}
+											{" "}<span class="tag">#{tag}</span>
+										{/each}
+									</span>
+								{/if}
+							</div>
+						</div>
 					</div>
-				</div>
+				{/if}
 			{/each}
 		</div>
 		<div class="prompt-instructions" data-mode="standard">
@@ -274,12 +297,12 @@
 			</div>
 			<div class="prompt-instruction">
 				<span class="prompt-instruction-command">tab</span><span
-					>to delete</span
+					>to close</span
 				>
 			</div>
 			<div class="prompt-instruction">
 				<span class="prompt-instruction-command">shift + tab</span><span
-					>to delete duplicate</span
+					>to close duplicate</span
 				>
 			</div>
 			<div class="prompt-instruction">

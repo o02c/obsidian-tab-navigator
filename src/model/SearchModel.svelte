@@ -296,12 +296,12 @@
 				>
 			</div>
 			<div class="prompt-instruction">
-				<span class="prompt-instruction-command">tab</span><span
+				<span class="prompt-instruction-command">⇥</span><span
 					>to close</span
 				>
 			</div>
 			<div class="prompt-instruction">
-				<span class="prompt-instruction-command">shift + tab</span><span
+				<span class="prompt-instruction-command">⇧ ⇥</span><span
 					>to close duplicate</span
 				>
 			</div>

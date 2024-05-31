@@ -132,10 +132,10 @@
 	}
 
 	function handleKeyDown(event: KeyboardEvent) {
-		if (event.key === "ArrowDown") {
+		if (event.key === "ArrowDown" || (event.key === "n" && event.ctrlKey)) {
 			selectedIndex = (selectedIndex + 1) % searchResults.length;
 			event.preventDefault();
-		} else if (event.key === "ArrowUp") {
+		} else if (event.key === "ArrowUp" || (event.key === "p" && event.ctrlKey)) {
 			selectedIndex =
 				(selectedIndex - 1 + searchResults.length) %
 				searchResults.length;

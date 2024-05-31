@@ -307,7 +307,7 @@
 			</div>
 			<div class="prompt-instruction">
 				<span class="prompt-instruction-command">esc</span><span
-					>to close</span
+					>to exit</span
 				>
 			</div>
 		</div>

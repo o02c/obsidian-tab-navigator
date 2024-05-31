@@ -4,13 +4,17 @@ TabNavigator is a simple tab switcher for Obsidian.
 
 ## Features
 
-- **Quick Tab Navigation**: Easily switch between your open tabs using keyboard shortcuts or the switcher interface.(tab-navigator:search-tabs)
+- **Quick Tab Navigation**: <br>
+Easily switch between open tabs by fuzzy searching through them.<br>
+Initiate using the command palette or assign a hotkey with `tab-navigator:search-tabs`.
   - Search targets:
     - file name
     - file path
     - frontmatter aliases (toggleable via the "Enable Alias Search" option, enabled by default)
     - frontmatter tags (toggleable via the "Enable Tag Search" option, enabled by default)
-- **Delete Duplicate Tabs**: Delete duplicate tabs from the switcher interface (or command) to manage your workspace efficiently. (tab-navigator:delete-duplicate-tabs)
+- **Delete Duplicate Tabs**: <br>
+Close duplicate tabs efficiently.<br>
+Initiate using the command palette or assign a hotkey with `tab-navigator:close-duplicate-tabs`.
 
 ## Installation
 

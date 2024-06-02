@@ -67,7 +67,7 @@ export default class TabSwitcher extends Plugin {
     const toRemove: WorkspaceLeaf[] = []; // 削除するタブを一時的に保存する配列
 
     this.app.workspace.iterateAllLeaves(leaf => {
-      if (leaf.view instanceof FileView) {
+      if (leaf.view instanceof FileView && 'editor' in leaf.view) {
         const file = leaf.view.file;
         if (file && seen.has(file.path)) {
           // 既に見たファイルのタブがあれば削除リストに追加

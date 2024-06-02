@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount, createEventDispatcher } from "svelte";
 	import Fuse from "fuse.js";
+	import type { FuseResultMatch } from "fuse.js";
 	import { App, WorkspaceLeaf, FileView, TFile, getIcon } from "obsidian";
 	import type { PluginSettings } from "../setting";
 	export let app: App;
@@ -14,26 +15,28 @@
 	let allLeaves: Array<{
 		leaf: WorkspaceLeaf;
 		titleOrName: string;
-		aliases: string[];
-		tags: string[];
+		aliases: string;
+		tags: string;
 		details: string;
 		extention: string | null;
+		matches: readonly FuseResultMatch[] | undefined;
 	}> = [];
 	let searchResults: Array<{
 		leaf: WorkspaceLeaf;
 		titleOrName: string;
-		aliases: string[];
-		tags: string[];
+		aliases: string;
+		tags: string;
 		details: string;
 		extention: string | null;
+		matches: readonly FuseResultMatch[] | undefined;
 	}> = [];
 	let selectedIndex = 0;
 	let inputElement: HTMLInputElement;
 	let fuse: Fuse<{
 		leaf: WorkspaceLeaf;
 		titleOrName: string;
-		aliases: string[];
-		tags: string[];
+		aliases: string;
+		tags: string;
 		details: string;
 		extention: string | null;
 	}>;
@@ -64,8 +67,8 @@
 		app.workspace.iterateRootLeaves((leaf: WorkspaceLeaf) => {
 			let titleOrName: string;
 			let details: string;
-			let aliases: string[] = [];
-			let tags: string[] = [];
+			let aliases: string = "";
+			let tags: string = "";
 			let extention: string | null = null;
 			if (leaf.view instanceof FileView) {
 				const file = leaf.view.file as TFile;
@@ -76,16 +79,20 @@
 					details = file.parent?.path ?? "";
 				}
 				extention = file.extension;
+				if (extention !== "md") {
+					titleOrName += "." + extention;
+				}
 				if (settings?.enableAliasSearch) {
 					const fileCache = app.metadataCache.getFileCache(file);
 					if (fileCache?.frontmatter?.aliases) {
-						aliases = fileCache.frontmatter.aliases;
+						aliases =
+							"@" + fileCache.frontmatter.aliases.join(" @");
 					}
 				}
 				if (settings?.enableTagSearch) {
 					const fileCache = app.metadataCache.getFileCache(file);
 					if (fileCache?.frontmatter?.tags) {
-						tags = fileCache.frontmatter.tags;
+						tags = "#" + fileCache.frontmatter.tags.join(" #");
 					}
 				}
 			} else {
@@ -102,14 +109,26 @@
 				tags,
 				details,
 				extention,
+				matches: undefined,
 			});
 		});
 		searchResults = allLeaves;
 
 		// Fuse.jsの設定
+		const keys = ["titleOrName"];
+		if (settings?.showFilePath) {
+			keys.push("details");
+		}
+		if (settings?.enableAliasSearch) {
+			keys.push("aliases");
+		}
+		if (settings?.enableTagSearch) {
+			keys.push("tags");
+		}
 		const options = {
 			includeScore: true,
-			keys: ["titleOrName", "details", "tags", "aliases", "extention"],
+			includeMatches: true,
+			keys: keys,
 		};
 		fuse = new Fuse(allLeaves, options);
 	}
@@ -124,9 +143,13 @@
 		if (searchInput.trim() === "") {
 			searchResults = allLeaves;
 		} else {
-			searchResults = fuse
-				.search(searchInput)
-				.map((result) => result.item);
+			searchResults = fuse.search(searchInput).map((result) => {
+				console.log(result);
+				return {
+					...result.item,
+					matches: result.matches,
+				};
+			});
 		}
 		selectedIndex = 0;
 	}
@@ -174,6 +197,35 @@
 	function removeTab(index: number) {
 		searchResults[index].leaf.detach();
 	}
+
+	// class="suggestion-highlight"で一致した文字列をハイライトする
+	function highlightMatches(
+		key: string,
+		text: string,
+		matches: readonly FuseResultMatch[] | undefined,
+	) {
+		if (!matches) return text;
+
+		// keyに対応するmatchesを見つける
+		const match = matches.find((m) => m.key === key);
+		if (!match) return text;
+		console.log(match);
+
+		// テキストをハイライトする
+		let highlightedText = text;
+		// matchesは後ろから適用することで、インデックスがずれるのを防ぐ
+		match.indices
+			.slice()
+			.reverse()
+			.forEach(([start, end]) => {
+				const before = highlightedText.substring(0, start);
+				const matchText = highlightedText.substring(start, end + 1);
+				const after = highlightedText.substring(end + 1);
+				highlightedText = `${before}<span class="suggestion-highlight">${matchText}</span>${after}`;
+			});
+
+		return highlightedText;
+	}
 </script>
 
 <div class="modal-container mod-dim">
@@ -192,7 +244,7 @@
 			<div class="prompt-input-cta"></div>
 		</div>
 		<div class="prompt-results">
-			{#each searchResults as { leaf, titleOrName, aliases, details, tags, extention }, index}
+			{#each searchResults as { leaf, titleOrName, aliases, details, tags, extention, matches }, index}
 				{#if settings?.showFilePath}
 					<div
 						class="suggestion-item mod-complex {index ===
@@ -209,25 +261,32 @@
 						<div class="suggestion-content">
 							<div class="suggestion-title">
 								<span
-									>{titleOrName}{extention &&
-									extention !== "md"
-										? "." + extention
-										: ""}</span
+									>{@html highlightMatches(
+										"titleOrName",
+										titleOrName,
+										matches,
+									)}</span
 								>
 								{#if settings?.enableAliasSearch && aliases.length > 0}
 									<span class="suggestion-note qsp-note">
-										{#each aliases as alias}
-											{" "}<span class="alias"
-												>@{alias}</span
-											>
-										{/each}
+										{" "}<span class="alias"
+											>@{@html highlightMatches(
+												"aliases",
+												aliases,
+												matches,
+											)}</span
+										>
 									</span>
 								{/if}
-								{#if settings?.enableTagSearch && tags.length > 0}
+								{#if settings?.enableTagSearch}
 									<span class="suggestion-note qsp-note">
-										{#each tags as tag}
-											{" "}<span class="tag">#{tag}</span>
-										{/each}
+										{" "}<span class="tag"
+											>{@html highlightMatches(
+												"tags",
+												tags,
+												matches,
+											)}</span
+										>
 									</span>
 								{/if}
 							</div>
@@ -236,7 +295,13 @@
 									{@html getIcon(leaf.getIcon())?.outerHTML ??
 										""}
 								</span>
-								<span class="qsp-path">{details}</span>
+								<span class="qsp-path"
+									>{@html highlightMatches(
+										"details",
+										details,
+										matches,
+									)}</span
+								>
 							</div>
 						</div>
 					</div>
@@ -260,25 +325,32 @@
 										""}
 								</span>
 								<span
-									>{titleOrName}{extention &&
-									extention !== "md"
-										? "." + extention
-										: ""}</span
-								>
+									>{@html highlightMatches(
+										"titleOrName",
+										titleOrName,
+										matches,
+									)}
+								</span>
 								{#if settings?.enableAliasSearch && aliases.length > 0}
 									<span class="suggestion-note qsp-note">
-										{#each aliases as alias}
-											{" "}<span class="alias"
-												>@{alias}</span
-											>
-										{/each}
+										{" "}<span class="alias"
+											>{@html highlightMatches(
+												"aliases",
+												aliases,
+												matches,
+											)}</span
+										>
 									</span>
 								{/if}
 								{#if settings?.enableTagSearch && tags.length > 0}
 									<span class="suggestion-note qsp-note">
-										{#each tags as tag}
-											{" "}<span class="tag">#{tag}</span>
-										{/each}
+										{" "}<span class="tag"
+											>{@html highlightMatches(
+												"tags",
+												tags,
+												matches,
+											)}</span
+										>
 									</span>
 								{/if}
 							</div>

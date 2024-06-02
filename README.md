@@ -41,7 +41,8 @@ say thanks or help support continued development, feel free to send a little
 my way through one of the following methods:
 
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/o02c?style=social)](https://github.com/sponsors/o02c)
-
+[![PayPal](https://img.shields.io/badge/paypal-o02c-yellow?style=social&logo=paypal)](https://paypal.me/o02c)
+[<img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="BuyMeACoffee" width="100">](https://www.buymeacoffee.com/_o2c)
 ## Support
 
 For questions or issues regarding TabNavigator, please use the GitHub Issues page for support. Feedback and feature requests are also welcome.

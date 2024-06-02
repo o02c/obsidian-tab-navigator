@@ -1,4 +1,4 @@
-import { Plugin, WorkspaceLeaf, FileView } from 'obsidian';
+import { Plugin, WorkspaceLeaf, EditableFileView } from 'obsidian';
 import SearchModel from './model/SearchModel.svelte';
 import { DEFAULT_SETTINGS, TabNavigatorSettingTab } from './setting';
 import type { PluginSettings } from './setting';
@@ -67,7 +67,7 @@ export default class TabSwitcher extends Plugin {
     const toRemove: WorkspaceLeaf[] = []; // 削除するタブを一時的に保存する配列
 
     this.app.workspace.iterateAllLeaves(leaf => {
-      if (leaf.view instanceof FileView && 'editor' in leaf.view) {
+      if (leaf.view instanceof EditableFileView) {
         const file = leaf.view.file;
         if (file && seen.has(file.path)) {
           // 既に見たファイルのタブがあれば削除リストに追加

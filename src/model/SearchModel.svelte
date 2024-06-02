@@ -135,12 +135,15 @@
 		if (event.key === "ArrowDown" || (event.key === "n" && event.ctrlKey)) {
 			selectedIndex = (selectedIndex + 1) % searchResults.length;
 			event.preventDefault();
-		} else if (event.key === "ArrowUp" || (event.key === "p" && event.ctrlKey)) {
+		} else if (
+			event.key === "ArrowUp" ||
+			(event.key === "p" && event.ctrlKey)
+		) {
 			selectedIndex =
 				(selectedIndex - 1 + searchResults.length) %
 				searchResults.length;
 			event.preventDefault();
-		} else if (event.key === "Enter") {
+		} else if (event.key === "Enter" && !event.isComposing) {
 			selectItem(selectedIndex);
 		} else if (event.key === "Escape") {
 			dispatch("close");

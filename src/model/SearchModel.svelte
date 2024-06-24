@@ -84,7 +84,7 @@
 				}
 				if (settings?.enableAliasSearch) {
 					const fileCache = app.metadataCache.getFileCache(file);
-					if (fileCache?.frontmatter?.aliases) {
+					if (fileCache?.frontmatter?.aliases && fileCache.frontmatter.aliases.length > 0) {
 						aliases =
 							"@" + fileCache.frontmatter.aliases.join(" @");
 					}
@@ -270,7 +270,7 @@
 								{#if settings?.enableAliasSearch && aliases.length > 0}
 									<span class="suggestion-note qsp-note">
 										{" "}<span class="alias"
-											>@{@html highlightMatches(
+											>{@html highlightMatches(
 												"aliases",
 												aliases,
 												matches,

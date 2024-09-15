@@ -1,4 +1,4 @@
-import { Plugin, WorkspaceLeaf, EditableFileView } from 'obsidian';
+import { Plugin, WorkspaceLeaf, EditableFileView, View } from 'obsidian';
 import SearchModel from './model/SearchModel.svelte';
 import { DEFAULT_SETTINGS, TabNavigatorSettingTab } from './setting';
 import type { PluginSettings } from './setting';
@@ -22,12 +22,15 @@ export default class TabSwitcher extends Plugin {
           this.searchModelInstance.$destroy();
           this.searchModelInstance = null;
         }
+        // アクティブなビューからカレントウィンドウを取得
+        const activeView = app.workspace.getActiveViewOfType(View);
+        const currentWindow = activeView?.containerEl.ownerDocument.defaultView ?? window;
         // 新しいインスタンスを作成
         this.searchModelInstance = new SearchModel({
-          // target: app.workspace.containerEl,
-          target: document.body,
+          target: currentWindow.document.body,
           props: {
             app,
+            currentWindow,
             settings: this.settings,
             removeDuplicateTabs: this.removeDuplicateTabs.bind(this),
           },
@@ -85,20 +88,24 @@ export default class TabSwitcher extends Plugin {
   }
 
 
-  openSearchModel() {
+  openSearchModal() {
     const { app } = this;
     if (this.searchModelInstance) {
       this.searchModelInstance.$destroy();
       this.searchModelInstance = null;
     }
-    this.searchModelInstance = new SearchModel({
-      target: app.workspace.containerEl,
+    const activeView = app.workspace.getActiveViewOfType(View);
+    const currentWindow = activeView?.containerEl.ownerDocument.defaultView ?? window
+    const modal = new SearchModel({
+      target: document.body,
       props: {
         app,
+        currentWindow: currentWindow,
         removeDuplicateTabs: this.removeDuplicateTabs.bind(this),
         settings: this.settings,
-      },
+      }
     });
+    modal.open();
   }
 
   // プラグインがアンロードされるときにコンポーネントを破棄

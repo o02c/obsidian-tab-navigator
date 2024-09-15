@@ -2,9 +2,10 @@
 	import { onMount, createEventDispatcher } from "svelte";
 	import Fuse from "fuse.js";
 	import type { FuseResultMatch } from "fuse.js";
-	import { App, WorkspaceLeaf, FileView, TFile, getIcon } from "obsidian";
+	import { App, WorkspaceLeaf, FileView, TFile, getIcon, View } from "obsidian";
 	import type { PluginSettings } from "../setting";
 	export let app: App;
+	export let currentWindow: Window;
 	export let removeDuplicateTabs: () => void;
 	export let settings: PluginSettings | null;
 
@@ -43,23 +44,23 @@
 	}>;
 
 	onMount(() => {
-		// モーダルの外側をクリックしたときにモーダルを閉じる
 		function handleClickOutside(event: MouseEvent) {
 			const path = event.composedPath();
 			if (!path.includes(modalContainer)) {
 				dispatch("close");
 			}
 		}
-		document.addEventListener("click", handleClickOutside);
+		currentWindow.document.addEventListener("click", handleClickOutside);
 
 		loadLeaves();
 		setCurrentLeafIndex();
+		currentWindow.addEventListener("keydown", handleKeyDown);
 		if (inputElement) {
 			inputElement.focus();
 		}
 		return () => {
-			document.removeEventListener("click", handleClickOutside);
-			window.removeEventListener("keydown", handleKeyDown);
+			currentWindow.document.removeEventListener("click", handleClickOutside);
+			currentWindow.removeEventListener("keydown", handleKeyDown);
 		};
 	});
 
@@ -73,7 +74,17 @@
 
 	async function loadLeaves() {
 		allLeaves = [];
-		app.workspace.iterateRootLeaves((leaf: WorkspaceLeaf) => {
+		app.workspace.iterateAllLeaves((leaf: WorkspaceLeaf) => {
+			if (
+				!(
+					leaf.view instanceof FileView &&
+					!["backlink", "outline", "tag", "outgoing-link"].includes(
+						leaf.getViewState().type,
+					)
+				)
+			) {
+				return;
+			}
 			let titleOrName: string;
 			let details: string;
 			let aliases: string = "";
@@ -93,7 +104,10 @@
 				}
 				if (settings?.enableAliasSearch) {
 					const fileCache = app.metadataCache.getFileCache(file);
-					if (fileCache?.frontmatter?.aliases && fileCache.frontmatter.aliases.length > 0) {
+					if (
+						fileCache?.frontmatter?.aliases &&
+						fileCache.frontmatter.aliases.length > 0
+					) {
 						aliases =
 							"@" + fileCache.frontmatter.aliases.join(" @");
 					}

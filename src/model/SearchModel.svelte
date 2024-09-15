@@ -31,6 +31,7 @@
 		matches: readonly FuseResultMatch[] | undefined;
 	}> = [];
 	let selectedIndex = 0;
+	let currentLeafIndex = 0;
 	let inputElement: HTMLInputElement;
 	let fuse: Fuse<{
 		leaf: WorkspaceLeaf;
@@ -52,7 +53,7 @@
 		document.addEventListener("click", handleClickOutside);
 
 		loadLeaves();
-		window.addEventListener("keydown", handleKeyDown);
+		setCurrentLeafIndex();
 		if (inputElement) {
 			inputElement.focus();
 		}
@@ -61,6 +62,14 @@
 			window.removeEventListener("keydown", handleKeyDown);
 		};
 	});
+
+	function setCurrentLeafIndex() {
+		const activeLeaf = app.workspace.activeLeaf;
+		currentLeafIndex = allLeaves.findIndex(
+			(leaf) => leaf.leaf === activeLeaf,
+		);
+		selectedIndex = currentLeafIndex >= 0 ? currentLeafIndex : 0;
+	}
 
 	async function loadLeaves() {
 		allLeaves = [];
@@ -96,11 +105,11 @@
 					}
 				}
 			} else {
-				titleOrName = leaf.view
+				titleOrName = (leaf.view as View)
 					.getViewType()
 					.replace(/_/g, " ")
 					.replace(/^\w/, (c) => c.toUpperCase());
-				details = ":" + leaf.view.getViewType();
+				details = ":" + (leaf.view as View).getViewType();
 			}
 			allLeaves.push({
 				leaf,
@@ -142,6 +151,7 @@
 	function filterSearchResults() {
 		if (searchInput.trim() === "") {
 			searchResults = allLeaves;
+			selectedIndex = currentLeafIndex >= 0 ? currentLeafIndex : 0;
 		} else {
 			searchResults = fuse.search(searchInput).map((result) => {
 				console.log(result);
@@ -190,8 +200,13 @@
 
 	function selectItem(index: number) {
 		const selectedItem = searchResults[index];
-		app.workspace.setActiveLeaf(selectedItem.leaf);
+		const leaf = selectedItem.leaf;
+
+		app.workspace.setActiveLeaf(leaf, { focus: true });
+		
+		setTimeout(() => {
 		dispatch("close");
+		}, 100);
 	}
 
 	function removeTab(index: number) {

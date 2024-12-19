@@ -137,7 +137,7 @@
 		});
 		searchResults = allLeaves;
 
-		// Fuse.jsの設定
+		// Fuse.js configuration
 		const keys = ["titleOrName"];
 		if (settings?.showFilePath) {
 			keys.push("details");
@@ -227,7 +227,7 @@
 		searchResults[index].leaf.detach();
 	}
 
-	// class="suggestion-highlight"で一致した文字列をハイライトする
+	// Highlight matched strings with class="suggestion-highlight"
 	function highlightMatches(
 		key: string,
 		text: string,
@@ -235,14 +235,13 @@
 	) {
 		if (!matches) return text;
 
-		// keyに対応するmatchesを見つける
+		// Find matches corresponding to the key
 		const match = matches.find((m) => m.key === key);
 		if (!match) return text;
-		console.log(match);
 
-		// テキストをハイライトする
+		// Highlight the text
 		let highlightedText = text;
-		// matchesは後ろから適用することで、インデックスがずれるのを防ぐ
+		// Apply matches from back to front to prevent index shifting
 		match.indices
 			.slice()
 			.reverse()

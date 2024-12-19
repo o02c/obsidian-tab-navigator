@@ -34,6 +34,16 @@ TabNavigator does not transmit any user data externally. All data is kept locall
 
 TabNavigator is designed to be lightweight and does not negatively impact Obsidian's performance. It is regularly updated to ensure compatibility with new versions of Obsidian.
 
+### Limitations
+
+- **Tab Loading Behavior**: 
+  - By default, inactive tabs are not loaded until they are clicked to preserve performance
+  - For searching through all tabs including unloaded ones, you can:
+    1. Manually click each tab to load it
+    2. command palette: `tab-navigator:load-all-tabs` (not recommended for vaults with many tabs)
+    3. Enable the "Load all tabs on startup" option in settings
+  - Note: Options 2 and 3 interact directly with the DOM to load tabs, which may cause unexpected behavior in some cases.
+
 ## Pricing
 
 This plugin is provided to everyone for free, however if you would like to

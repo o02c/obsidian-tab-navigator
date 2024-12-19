@@ -1,31 +1,37 @@
-import { Plugin, WorkspaceLeaf, EditableFileView, View } from 'obsidian';
+import { Plugin, WorkspaceLeaf, EditableFileView, View, FileView, TFile } from 'obsidian';
 import SearchModel from './model/SearchModel.svelte';
 import { DEFAULT_SETTINGS, TabNavigatorSettingTab } from './setting';
 import type { PluginSettings } from './setting';
 
 export default class TabSwitcher extends Plugin {
-  searchModelInstance: SearchModel | null = null; // SearchModelのインスタンスを保持するためのプロパティ
+  searchModelInstance: SearchModel | null = null;
   settings: PluginSettings | null = null;
-
 
   async onload() {
     await this.loadSettings();
-    this.addSettingTab(new TabNavigatorSettingTab(this.app, this))
+    this.addSettingTab(new TabNavigatorSettingTab(this.app, this));
+
+    // Control tab loading on startup based on settings
+    if (this.settings?.loadAllTabsOnStartup) {
+        this.app.workspace.onLayoutReady(() => {
+            this.loadAllTabsFromDOM();
+        });
+    }
 
     this.addCommand({
       id: 'search-tabs',
       name: 'Search tabs',
       callback: () => {
         const { app } = this;
-        // 既存のインスタンスがあれば破棄する
+        // Destroy existing instance if it exists
         if (this.searchModelInstance) {
           this.searchModelInstance.$destroy();
           this.searchModelInstance = null;
         }
-        // アクティブなビューからカレントウィンドウを取得
+        // Get current window from active view
         const activeView = app.workspace.getActiveViewOfType(View);
         const currentWindow = activeView?.containerEl.ownerDocument.defaultView ?? window;
-        // 新しいインスタンスを作成
+        // Create new instance
         this.searchModelInstance = new SearchModel({
           target: currentWindow.document.body,
           props: {
@@ -36,7 +42,7 @@ export default class TabSwitcher extends Plugin {
           },
         });
 
-        // イベントリスナーを追加
+        // Add event listener
         this.searchModelInstance.$on('close', () => {
           if (this.searchModelInstance) {
             this.searchModelInstance.$destroy();
@@ -46,13 +52,22 @@ export default class TabSwitcher extends Plugin {
       },
     });
 
-    // 重複するタブを削除するコマンドを追加
+    // Command to remove duplicate tabs
     this.addCommand({
       id: 'remove-duplicate-tabs',
       name: 'Remove duplicate tabs',
       callback: () => {
         this.removeDuplicateTabs();
       },
+    });
+
+    // Command to load all tabs
+    this.addCommand({
+        id: 'load-all-tabs',
+        name: 'Load all tabs',
+        callback: () => {
+            this.loadAllTabsFromDOM();
+        }
     });
   }
 
@@ -64,16 +79,16 @@ export default class TabSwitcher extends Plugin {
     await this.saveData(this.settings);
   }
 
-  // 重複するタブを削除するメソッド
+  // Method to remove duplicate tabs
   removeDuplicateTabs() {
     const seen = new Set();
-    const toRemove: WorkspaceLeaf[] = []; // 削除するタブを一時的に保存する配列
+    const toRemove: WorkspaceLeaf[] = []; // Array to temporarily store tabs to be removed
 
     this.app.workspace.iterateAllLeaves(leaf => {
       if (leaf.view instanceof EditableFileView) {
         const file = leaf.view.file;
         if (file && seen.has(file.path)) {
-          // 既に見たファイルのタブがあれば削除リストに追加
+          // Add to removal list if we've seen this file before
           toRemove.push(leaf);
         } else if (file) {
           seen.add(file.path);
@@ -83,35 +98,30 @@ export default class TabSwitcher extends Plugin {
       }
     });
 
-    // 削除リストにあるタブをまとめて削除
+    // Remove all tabs in the removal list
     toRemove.forEach(leaf => leaf.detach());
   }
 
-
-  openSearchModal() {
-    const { app } = this;
-    if (this.searchModelInstance) {
-      this.searchModelInstance.$destroy();
-      this.searchModelInstance = null;
-    }
-    const activeView = app.workspace.getActiveViewOfType(View);
-    const currentWindow = activeView?.containerEl.ownerDocument.defaultView ?? window
-    const modal = new SearchModel({
-      target: document.body,
-      props: {
-        app,
-        currentWindow: currentWindow,
-        removeDuplicateTabs: this.removeDuplicateTabs.bind(this),
-        settings: this.settings,
-      }
-    });
-    modal.open();
-  }
-
-  // プラグインがアンロードされるときにコンポーネントを破棄
+  // Destroy component when plugin is unloaded
   onunload() {
     if (this.searchModelInstance) {
       this.searchModelInstance.$destroy();
+    }
+  }
+
+  // Method to load all tabs from DOM
+  private async loadAllTabsFromDOM() {
+    const tabHeaders = document.querySelectorAll('.workspace-tab-header');
+    
+    for (const header of Array.from(tabHeaders)) {
+      const type = header.getAttribute('data-type');
+      // Only target markdown file tabs
+      if (type === 'markdown') {
+        // Click the tab to open it
+        (header as HTMLElement).click();
+        // Wait a bit before opening next tab (to reduce load)
+        await new Promise(resolve => setTimeout(resolve, 25));
+      }
     }
   }
 }

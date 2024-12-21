@@ -111,6 +111,8 @@ export default class TabSwitcher extends Plugin {
 
   // Method to load all tabs from DOM
   private async loadAllTabsFromDOM() {
+    // Save the current active view
+    const activeView = this.app.workspace.getActiveViewOfType(View);
     const tabHeaders = document.querySelectorAll('.workspace-tab-header');
     
     for (const header of Array.from(tabHeaders)) {
@@ -122,6 +124,11 @@ export default class TabSwitcher extends Plugin {
         // Wait a bit before opening next tab (to reduce load)
         await new Promise(resolve => setTimeout(resolve, 25));
       }
+    }
+
+    // Return to the original view
+    if (activeView?.leaf) {
+      this.app.workspace.setActiveLeaf(activeView.leaf, { focus: true });
     }
   }
 }

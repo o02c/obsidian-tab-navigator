@@ -6,7 +6,6 @@ export interface PluginSettings {
     includeFileNameInPath: boolean;
     enableTagSearch: boolean;
     enableAliasSearch: boolean;
-    loadAllTabsOnStartup: boolean;
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
@@ -14,7 +13,6 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     includeFileNameInPath: true,
     enableTagSearch: true,
     enableAliasSearch: true,
-    loadAllTabsOnStartup: false,
 };
 
 export class TabNavigatorSettingTab extends PluginSettingTab {
@@ -74,21 +72,6 @@ export class TabNavigatorSettingTab extends PluginSettingTab {
                     .onChange(value => {
                         settings.enableTagSearch = value;
                         this.plugin.saveSettings();
-                    })
-                );
-
-            new Setting(containerEl)
-                .setName("Load all tabs on startup (Experimental)")
-                .setDesc(
-                    "Automatically load all tabs when Obsidian starts. " +
-                    "⚠️ This is an experimental feature that might impact startup performance. " +
-                    "May not work correctly in all situations."
-                )
-                .addToggle(toggle => toggle
-                    .setValue(settings.loadAllTabsOnStartup)
-                    .onChange(async (value) => {
-                        settings.loadAllTabsOnStartup = value;
-                        await this.plugin.saveSettings();
                     })
                 );
         }

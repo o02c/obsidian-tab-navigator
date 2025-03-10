@@ -3,6 +3,7 @@
 	import Fuse from "fuse.js";
 	import type { FuseResultMatch } from "fuse.js";
 	import { App, WorkspaceLeaf, FileView, TFile, getIcon, View } from "obsidian";
+	import type { ViewState } from "obsidian";
 	import type { PluginSettings } from "../setting";
 	export let app: App;
 	export let currentWindow: Window;
@@ -75,22 +76,27 @@
 	async function loadLeaves() {
 		allLeaves = [];
 		app.workspace.iterateAllLeaves((leaf: WorkspaceLeaf) => {
-			if (
-				!(
-					leaf.view instanceof FileView &&
-					!["backlink", "outline", "tag", "outgoing-link"].includes(
-						leaf.getViewState().type,
-					)
-				)
-			) {
+			// Get the view state which is available even if the tab hasn't been loaded yet
+			const viewState = leaf.getViewState();
+			
+			// ファイルタブのみを対象にする（markdown、pdf、canvasなど）
+			if (!(viewState.type === "markdown" || viewState.type === "pdf" || viewState.type === "canvas")) {
 				return;
 			}
+			
+			// Skip certain view types that shouldn't be in the tab list
+			if (["backlink", "outline", "tag", "outgoing-link"].includes(viewState.type)) {
+				return;
+			}
+			
 			let titleOrName: string;
 			let details: string;
 			let aliases: string = "";
 			let tags: string = "";
 			let extention: string | null = null;
-			if (leaf.view instanceof FileView) {
+			
+			// Try to get information from the loaded view if available
+			if (leaf.view instanceof FileView && leaf.view.file) {
 				const file = leaf.view.file as TFile;
 				titleOrName = file.basename;
 				if (settings?.includeFileNameInPath) {
@@ -102,6 +108,8 @@
 				if (extention !== "md") {
 					titleOrName += "." + extention;
 				}
+				
+				// Get aliases and tags if enabled and available
 				if (settings?.enableAliasSearch) {
 					const fileCache = app.metadataCache.getFileCache(file);
 					if (
@@ -118,13 +126,31 @@
 						tags = "#" + fileCache.frontmatter.tags.join(" #");
 					}
 				}
-			} else {
-				titleOrName = (leaf.view as View)
-					.getViewType()
-					.replace(/_/g, " ")
-					.replace(/^\w/, (c) => c.toUpperCase());
-				details = ":" + (leaf.view as View).getViewType();
+			} 
+			// If view is not loaded, try to get information from the view state
+			else if (viewState.state?.file) {
+				// Get the file path from the view state
+				const filePath = viewState.state.file;
+				
+				// Extract filename and path information
+				const pathParts = filePath.split('/');
+				const fileName = pathParts.pop() || "";
+				const fileNameParts = fileName.split('.');
+				extention = fileNameParts.length > 1 ? fileNameParts.pop() || null : null;
+				titleOrName = extention ? fileNameParts.join('.') : fileName;
+				
+				if (settings?.includeFileNameInPath) {
+					details = filePath;
+				} else {
+					details = pathParts.join('/');
+				}
 			}
+			// Fallback if we can't get information from either source
+			else {
+				titleOrName = viewState.title || "Unknown";
+				details = viewState.type;
+			}
+			
 			allLeaves.push({
 				leaf,
 				titleOrName,

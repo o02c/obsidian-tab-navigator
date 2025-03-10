@@ -1,4 +1,5 @@
 import { Plugin, WorkspaceLeaf, EditableFileView, View, FileView, TFile } from 'obsidian';
+import type { ViewState } from 'obsidian';
 import SearchModel from './model/SearchModel.svelte';
 import { DEFAULT_SETTINGS, TabNavigatorSettingTab } from './setting';
 import type { PluginSettings } from './setting';
@@ -10,13 +11,6 @@ export default class TabSwitcher extends Plugin {
   async onload() {
     await this.loadSettings();
     this.addSettingTab(new TabNavigatorSettingTab(this.app, this));
-
-    // Control tab loading on startup based on settings
-    if (this.settings?.loadAllTabsOnStartup) {
-        this.app.workspace.onLayoutReady(() => {
-            this.loadAllTabsFromDOM();
-        });
-    }
 
     this.addCommand({
       id: 'search-tabs',
@@ -66,7 +60,7 @@ export default class TabSwitcher extends Plugin {
         id: 'load-all-tabs',
         name: 'Load all tabs',
         callback: () => {
-            this.loadAllTabsFromDOM();
+            this.populateTabsFromWorkspaceData();
         }
     });
   }
@@ -109,26 +103,17 @@ export default class TabSwitcher extends Plugin {
     }
   }
 
-  // Method to load all tabs from DOM
-  private async loadAllTabsFromDOM() {
-    // Save the current active view
-    const activeView = this.app.workspace.getActiveViewOfType(View);
-    const tabHeaders = document.querySelectorAll('.workspace-tab-header');
+  // Method to populate tabs from workspace data without loading them
+  private populateTabsFromWorkspaceData() {
+    // We don't need to do anything special here, as the tabs are already in the workspace
+    // The SearchModel will use app.workspace.iterateAllLeaves() to get all tabs
+    // This is just a placeholder method to maintain the API
+    // The actual work happens in the SearchModel when it's opened
     
-    for (const header of Array.from(tabHeaders)) {
-      const type = header.getAttribute('data-type');
-      // Only target markdown file tabs
-      if (type === 'markdown') {
-        // Click the tab to open it
-        (header as HTMLElement).click();
-        // Wait a bit before opening next tab (to reduce load)
-        await new Promise(resolve => setTimeout(resolve, 25));
-      }
-    }
-
-    // Return to the original view
-    if (activeView?.leaf) {
-      this.app.workspace.setActiveLeaf(activeView.leaf, { focus: true });
+    // If we want to force a refresh of the tab list in any open SearchModel instances:
+    if (this.searchModelInstance) {
+      this.searchModelInstance.$destroy();
+      this.searchModelInstance = null;
     }
   }
 }

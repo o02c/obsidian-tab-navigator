@@ -38,12 +38,12 @@ jobs:
           git commit -m "Automatically update manifest version to ${{ github.ref_name }} by GitHub Actions"
           git push origin HEAD:main
 
-      - name: Create release
+      - name: Create and publish release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           tag="${GITHUB_REF#refs/tags/}"
           gh release create "$tag" \
             --title="$tag" \
-            --draft \
+            --notes="Release $tag" \
             main.js manifest.json

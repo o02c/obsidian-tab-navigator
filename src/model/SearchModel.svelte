@@ -284,7 +284,7 @@
 
 <div class="modal-container mod-dim">
 	<div class="modal-bg" style="opacity: 0.85;"></div>
-	<div bind:this={modalContainer} class="prompt">
+	<div bind:this={modalContainer} class="prompt tab-navigator-modal">
 		<div class="prompt-input-container">
 			<input
 				class="prompt-input"

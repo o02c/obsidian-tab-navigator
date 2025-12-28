@@ -5,5 +5,9 @@
   "minAppVersion": "1.5.12",
   "description": "Simple Tab Switcher, search open tabs.",
   "author": "o02c",
-  "isDesktopOnly": true
+  "isDesktopOnly": true,
+  "fundingUrl": {
+    "PayPal": "https://paypal.me/o02c",
+    "Buy Me a Coffee": "https://www.buymeacoffee.com/_o2c"
+  }
 }
